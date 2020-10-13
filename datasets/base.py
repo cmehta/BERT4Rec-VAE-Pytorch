@@ -54,6 +54,10 @@ class AbstractDataset(metaclass=ABCMeta):
     def load_ratings_df(self):
         pass
 
+    @abstractmethod
+    def load_movie_df(self):
+        pass
+
     def load_dataset(self):
         self.preprocess()
         dataset_path = self._get_preprocessed_dataset_path()
@@ -69,15 +73,20 @@ class AbstractDataset(metaclass=ABCMeta):
             dataset_path.parent.mkdir(parents=True)
         self.maybe_download_raw_dataset()
         df = self.load_ratings_df()
+        movie_df = self.load_movie_df()
         df = self.make_implicit(df)
         df = self.filter_triplets(df)
         df, umap, smap = self.densify_index(df)
+        movie_genre_df = self.get_movie_genre_df(movie_df, smap)
+        df = pd.merge(df, movie_genre_df, how='inner', on='sid')
         train, val, test = self.split_df(df, len(umap))
+        movie_genre_map = {sid: genre_index for sid, genre_index in zip(movie_genre_df.sid, movie_genre_df.genre_index)}
         dataset = {'train': train,
                    'val': val,
                    'test': test,
                    'umap': umap,
-                   'smap': smap}
+                   'smap': smap,
+                   'movie_genre_map': movie_genre_map}
         with dataset_path.open('wb') as f:
             pickle.dump(dataset, f)
 
@@ -136,11 +145,30 @@ class AbstractDataset(metaclass=ABCMeta):
         df['sid'] = df['sid'].map(smap)
         return df, umap, smap
 
+    def get_movie_genre_df(self, movie_df, smap):
+        # Converting genre to numerical ids.
+        genre_id_map = {u: i for i, u in enumerate(set(movie_df['genres']))}
+        movie_df['genre_index'] = movie_df['genres'].map(genre_id_map)
+        # Change the sid to densified sid.
+        # Step1. Convert smap to a dataframe.
+        old_id = list(smap.keys())
+        new_id = list(smap.values())
+        new_smap = {'sid': old_id, 'new_sid': new_id}
+        smap_df = pd.DataFrame.from_dict(new_smap)
+        # Step2. Join with SMAP to attain new movie ids.
+        movie_df = pd.merge(movie_df, smap_df, how='inner', on='sid')
+        # Step3. Dropping unnecessary columns and forming final df.
+        movie_df.drop(['sid', 'title', 'genres'], axis=1, inplace=True)
+        movie_df.columns = ['genre_index', 'sid']
+        return movie_df
+
     def split_df(self, df, user_count):
         if self.args.split == 'leave_one_out':
             print('Splitting')
             user_group = df.groupby('uid')
-            user2items = user_group.progress_apply(lambda d: list(d.sort_values(by='timestamp')['sid']))
+            user2items = user_group.progress_apply(lambda d: list(zip(d.sort_values(by='timestamp')['sid'],
+                                                                      d.sort_values(by='timestamp')['genre_index'])))
+
             train, val, test = {}, {}, {}
             for user in range(user_count):
                 items = user2items[user]
@@ -163,9 +191,10 @@ class AbstractDataset(metaclass=ABCMeta):
             test_df  = df.loc[df['uid'].isin(test_user_index)]
 
             # DataFrame to dict => {uid : list of sid's}
-            train = dict(train_df.groupby('uid').progress_apply(lambda d: list(d['sid'])))
-            val   = dict(val_df.groupby('uid').progress_apply(lambda d: list(d['sid'])))
-            test  = dict(test_df.groupby('uid').progress_apply(lambda d: list(d['sid'])))
+            train = dict(train_df.groupby('uid').progress_apply(lambda d: list(zip(d['sid'], d['genre_index']))))
+            val   = dict(val_df.groupby('uid').progress_apply(lambda d: list(zip(d['sid'], d['genre_index']))))
+            test  = dict(test_df.groupby('uid').progress_apply(lambda d: list(zip(d['sid'], d['genre_index']))))
+
             return train, val, test
         else:
             raise NotImplementedError

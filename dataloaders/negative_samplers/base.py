@@ -4,7 +4,7 @@ import pickle
 
 
 class AbstractNegativeSampler(metaclass=ABCMeta):
-    def __init__(self, train, val, test, user_count, item_count, sample_size, seed, save_folder):
+    def __init__(self, train, val, test, user_count, item_count, sample_size, seed, save_folder, movie_genre_map):
         self.train = train
         self.val = val
         self.test = test
@@ -13,6 +13,7 @@ class AbstractNegativeSampler(metaclass=ABCMeta):
         self.sample_size = sample_size
         self.seed = seed
         self.save_folder = save_folder
+        self.movie_genre_map = movie_genre_map
 
     @classmethod
     @abstractmethod

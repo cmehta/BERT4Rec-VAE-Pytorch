@@ -5,6 +5,15 @@ import torch
 import torch.utils.data as data_utils
 
 
+def extract_genres(u2seq):
+    new_u2seq = dict()
+    for user, movie_genre_list in u2seq.items():
+        genre_list = list()
+        for movie_genre_tup in movie_genre_list:
+            genre_list.append(movie_genre_tup[1])
+        new_u2seq[user] = genre_list
+    return new_u2seq
+
 class BertDataloader(AbstractDataloader):
     def __init__(self, args, dataset):
         super().__init__(args, dataset)
@@ -18,13 +27,13 @@ class BertDataloader(AbstractDataloader):
                                                           self.user_count, self.item_count,
                                                           args.train_negative_sample_size,
                                                           args.train_negative_sampling_seed,
-                                                          self.save_folder)
+                                                          self.save_folder, self.movie_genre_map)
         code = args.test_negative_sampler_code
         test_negative_sampler = negative_sampler_factory(code, self.train, self.val, self.test,
                                                          self.user_count, self.item_count,
                                                          args.test_negative_sample_size,
                                                          args.test_negative_sampling_seed,
-                                                         self.save_folder)
+                                                         self.save_folder, self.movie_genre_map)
 
         self.train_negative_samples = train_negative_sampler.get_negative_samples()
         self.test_negative_samples = test_negative_sampler.get_negative_samples()
@@ -63,14 +72,15 @@ class BertDataloader(AbstractDataloader):
         return dataloader
 
     def _get_eval_dataset(self, mode):
-        answers = self.val if mode == 'val' else self.test
+        answers = extract_genres(self.val) if mode == 'val' else extract_genres(self.test)
         dataset = BertEvalDataset(self.train, answers, self.max_len, self.CLOZE_MASK_TOKEN, self.test_negative_samples)
         return dataset
 
 
 class BertTrainDataset(data_utils.Dataset):
     def __init__(self, u2seq, max_len, mask_prob, mask_token, num_items, rng):
-        self.u2seq = u2seq
+        new_u2seq = extract_genres(u2seq)
+        self.u2seq = new_u2seq
         self.users = sorted(self.u2seq.keys())
         self.max_len = max_len
         self.mask_prob = mask_prob
@@ -118,10 +128,10 @@ class BertTrainDataset(data_utils.Dataset):
         return self.u2seq[user]
 
 
-
 class BertEvalDataset(data_utils.Dataset):
     def __init__(self, u2seq, u2answer, max_len, mask_token, negative_samples):
-        self.u2seq = u2seq
+        new_u2seq = extract_genres(u2seq)
+        self.u2seq = new_u2seq
         self.users = sorted(self.u2seq.keys())
         self.u2answer = u2answer
         self.max_len = max_len

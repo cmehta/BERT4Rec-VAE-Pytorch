@@ -14,6 +14,7 @@ class AbstractDataloader(metaclass=ABCMeta):
         self.test = dataset['test']
         self.umap = dataset['umap']
         self.smap = dataset['smap']
+        self.movie_genre_map = dataset['movie_genre_map']
         self.user_count = len(self.umap)
         self.item_count = len(self.smap)
 

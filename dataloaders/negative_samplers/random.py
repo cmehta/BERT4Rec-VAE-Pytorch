@@ -27,11 +27,15 @@ class RandomNegativeSampler(AbstractNegativeSampler):
 
             samples = []
             for _ in range(self.sample_size):
-                item = np.random.choice(self.item_count) + 1
+                # item = np.random.choice(self.item_count) + 1
+                item = np.random.choice(self.item_count)
+                # genre = self.movie_genre_map[item]
                 while item in seen or item in samples:
-                    item = np.random.choice(self.item_count) + 1
+                    item = np.random.choice(self.item_count)
+                    # item = np.random.choice(self.item_count) + 1
                 samples.append(item)
 
+            samples = list(map(lambda x:self.movie_genre_map[x], samples))
             negative_samples[user] = samples
 
         return negative_samples
