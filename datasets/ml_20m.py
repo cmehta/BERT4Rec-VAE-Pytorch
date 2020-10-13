@@ -37,8 +37,9 @@ class ML20MDataset(AbstractDataset):
 
     def load_movie_df(self):
         folder_path = self._get_rawdata_folder_path()
-        file_path = folder_path.joinpath('movies.dat')
-        df = pd.read_csv(file_path, sep='::', header=None)
+        file_path = folder_path.joinpath('movies.csv')
+        # df = pd.read_csv(file_path, sep='::', header=None)
+        df = pd.read_csv(file_path)
         df.columns = ['sid', 'title', 'genres']
         return df
 
