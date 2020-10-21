@@ -16,7 +16,8 @@ class AbstractDataloader(metaclass=ABCMeta):
         self.smap = dataset['smap']
         self.movie_genre_map = dataset['movie_genre_map']
         self.user_count = len(self.umap)
-        self.item_count = len(self.smap)
+        # self.item_count = len(self.smap)
+        self.item_count = len(set(self.movie_genre_map.values()))
 
     @classmethod
     @abstractmethod
