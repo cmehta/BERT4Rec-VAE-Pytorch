@@ -8,6 +8,7 @@ from utils import *
 
 
 def train():
+    torch.cuda.empty_cache()
     export_root = setup_train(args)
     train_loader, val_loader, test_loader = dataloader_factory(args)
     model = model_factory(args)

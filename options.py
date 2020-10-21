@@ -47,20 +47,20 @@ parser.add_argument('--test_batch_size', type=int, default=64)
 parser.add_argument('--train_negative_sampler_code', type=str, default='random', choices=['popular', 'random'],
                     help='Method to sample negative items for training. Not used in bert')
 parser.add_argument('--train_negative_sample_size', type=int, default=100)
-parser.add_argument('--train_negative_sampling_seed', type=int, default=None)
+parser.add_argument('--train_negative_sampling_seed', type=int, default=71)
 parser.add_argument('--test_negative_sampler_code', type=str, default='random', choices=['popular', 'random'],
                     help='Method to sample negative items for evaluation')
 parser.add_argument('--test_negative_sample_size', type=int, default=100)
-parser.add_argument('--test_negative_sampling_seed', type=int, default=None)
+parser.add_argument('--test_negative_sampling_seed', type=int, default=79)
 
 ################
 # Trainer
 ################
 parser.add_argument('--trainer_code', type=str, default='bert', choices=TRAINERS.keys())
 # device #
-parser.add_argument('--device', type=str, default='cpu', choices=['cpu', 'cuda'])
-parser.add_argument('--num_gpu', type=int, default=1)
-parser.add_argument('--device_idx', type=str, default='0')
+parser.add_argument('--device', type=str, default='cuda', choices=['cpu', 'cuda'])
+parser.add_argument('--num_gpu', type=int, default=4)
+parser.add_argument('--device_idx', type=str, default='0,1,2,3')
 # optimizer #
 parser.add_argument('--optimizer', type=str, default='Adam', choices=['SGD', 'Adam'])
 parser.add_argument('--lr', type=float, default=0.001, help='Learning rate')
@@ -86,7 +86,7 @@ parser.add_argument('--anneal_cap', type=float, default=0.2, help='Upper limit o
 # Model
 ################
 parser.add_argument('--model_code', type=str, default='bert', choices=MODELS.keys())
-parser.add_argument('--model_init_seed', type=int, default=None)
+parser.add_argument('--model_init_seed', type=int, default=117)
 # BERT #
 parser.add_argument('--bert_max_len', type=int, default=None, help='Length of sequence for bert')
 parser.add_argument('--bert_num_items', type=int, default=None, help='Number of total items')
