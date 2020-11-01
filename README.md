@@ -37,11 +37,4 @@ Numbers under model names indicate the number of hidden layers.
 
 ## MovieLens-1m
 
-<img src=Images/ML1m-results.png>
-
-## MovieLens-20m
-
-<img src=Images/ML20m-results.png>
-
-## Results 
 We observe HR@10=0.923 and NDCG@10=0.772 on MovieLens-1m
